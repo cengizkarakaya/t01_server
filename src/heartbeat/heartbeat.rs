@@ -3,7 +3,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
-const MAIN_PC_ADDR: &str = "192.168.1.1:20000";
+const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
 
 pub fn heartbeat() -> std::io::Result<()> {
@@ -32,7 +32,7 @@ pub fn heartbeat() -> std::io::Result<()> {
     }
 }
 
-pub fn current_time_ms() -> u128 {
+fn current_time_ms() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

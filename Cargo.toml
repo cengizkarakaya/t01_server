@@ -2,5 +2,18 @@
 name = "t01_server"
 version = "0.1.0"
 edition = "2024"
+default-run = "t01_server"
+description = "t01, raspberry pi zero 2 w da çalışacak kodlar"
+license = "MIT"
+repository = "https://github.com/cengizkarakaya/t01_server"
+homepage = "https://github.com/cengizkarakaya/t01_server"
+keywords = ["rust", "t01_server", "t01", "cli"]
+categories = ["t01_server"]
+authors = ["Cengiz Karakaya <cengizkarakaya@hotmail.com>"]
+rust-version = "1.95"
+
+[workspace]
+members = ["lib"]
 
 [dependencies]
+lib = { path = "lib" }
