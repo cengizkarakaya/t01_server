@@ -19,7 +19,7 @@ pub fn heartbeat() -> std::io::Result<()> {
         let timestamp_ms = current_time_ms();
 
         let msg = format!(
-            "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
+            "\r{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
             seq, timestamp_ms
         );
 
