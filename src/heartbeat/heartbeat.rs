@@ -1,0 +1,40 @@
+use std::net::UdpSocket;
+use std::thread;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
+const MAIN_PC_ADDR: &str = "192.168.1.1:20000";
+const HEARTBEAT_INTERVAL_MS: u64 = 250;
+
+pub fn heartbeat() -> std::io::Result<()> {
+    let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
+
+    println!("t01 UDP heartbeat sender başladı");
+    println!("Ana-PC hedef adresi: {MAIN_PC_ADDR}");
+    println!("Heartbeat aralığı: {HEARTBEAT_INTERVAL_MS} ms");
+
+    let mut seq: u32 = 0;
+
+    loop {
+        let timestamp_ms = current_time_ms();
+
+        let msg = format!(
+            "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
+            seq, timestamp_ms
+        );
+
+        socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
+
+        println!("heartbeat gönderildi: seq={seq}, timestamp_ms={timestamp_ms}");
+
+        seq = seq.wrapping_add(1);
+        thread::sleep(Duration::from_millis(HEARTBEAT_INTERVAL_MS));
+    }
+}
+
+pub fn current_time_ms() -> u128 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+}
