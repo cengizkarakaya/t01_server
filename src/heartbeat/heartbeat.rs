@@ -26,7 +26,7 @@ pub fn heartbeat() -> std::io::Result<()> {
 
         socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
 
-        print!("\r\x1B[2Kheartbeat gönderildi: {msg}");
+        print!("\r\x1B[2K\x1B[?7lheartbeat gönderildi: {msg}\x1B[?7h");
         io::stdout().flush()?;
 
         seq = seq.wrapping_add(1);
