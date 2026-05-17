@@ -1,3 +1,4 @@
+use std::io::{self, Write};
 use std::net::UdpSocket;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -12,6 +13,7 @@ pub fn heartbeat() -> std::io::Result<()> {
     println!("t01 UDP heartbeat sender başladı");
     println!("Ana-PC hedef adresi: {MAIN_PC_ADDR}");
     println!("Heartbeat aralığı: {HEARTBEAT_INTERVAL_MS} ms");
+    println!();
 
     let mut seq: u32 = 0;
 
@@ -19,13 +21,14 @@ pub fn heartbeat() -> std::io::Result<()> {
         let timestamp_ms = current_time_ms();
 
         let msg = format!(
-            "\r{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
+            "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
             seq, timestamp_ms
         );
 
         socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
 
-        println!("heartbeat gönderildi: seq={seq}, timestamp_ms={timestamp_ms}");
+        print!("\x1B[1A\r\x1B[2Kheartbeat gönderildi: {msg}\n");
+        io::stdout().flush()?;
 
         seq = seq.wrapping_add(1);
         thread::sleep(Duration::from_millis(HEARTBEAT_INTERVAL_MS));
