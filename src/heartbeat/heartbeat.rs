@@ -62,12 +62,12 @@ fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> io::Result<()> {
     print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}");
 
     println!("{BOLD}{CYAN}╔══════════════════════════════════════════════════════════════╗{RESET}");
-    println!("{BOLD}{CYAN}║{RESET} {BOLD}{GREEN}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{CYAN}║{RESET}");
+    println!("{BOLD}{CYAN}║{RESET} {BOLD}{GREEN}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{CYAN}    ║{RESET}");
     println!("{BOLD}{CYAN}╚══════════════════════════════════════════════════════════════╝{RESET}");
     println!();
 
     println!("{BOLD}{BLUE}┌─ DURUM ─────────────────────────────────────────────────────┐{RESET}");
-    println!("{BOLD}{BLUE}│{RESET} {BOLD}{GREEN}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}        {BOLD}{BLUE}│{RESET}");
+    println!("{BOLD}{BLUE}│{RESET} {BOLD}{GREEN}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{BLUE}│{RESET}");
     println!("{BOLD}{BLUE}└─────────────────────────────────────────────────────────────┘{RESET}");
     println!();
 
