@@ -13,7 +13,6 @@ pub fn heartbeat() -> std::io::Result<()> {
     println!("t01 UDP heartbeat sender başladı");
     println!("Ana-PC hedef adresi: {MAIN_PC_ADDR}");
     println!("Heartbeat aralığı: {HEARTBEAT_INTERVAL_MS} ms");
-    println!();
 
     let mut seq: u32 = 0;
 
@@ -27,7 +26,7 @@ pub fn heartbeat() -> std::io::Result<()> {
 
         socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
 
-        print!("\x1B[1A\r\x1B[2Kheartbeat gönderildi: {msg}\n");
+        print!("\r\x1B[2Kheartbeat gönderildi: {msg}");
         io::stdout().flush()?;
 
         seq = seq.wrapping_add(1);
