@@ -1,7 +1,7 @@
 mod heartbeat;
 
 fn main() -> std::io::Result<()> {
-    println!("{}", "t01 den merhaba!!!");
+    println!("{}", "\n\x1b[38;2;0;135;255mt01 den merhaba!!!");
     heartbeat::heartbeat()?;
     Ok(())
 }
