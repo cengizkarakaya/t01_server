@@ -10,9 +10,9 @@ const HEARTBEAT_INTERVAL_MS: u64 = 250;
 pub fn heartbeat() -> std::io::Result<()> {
     let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
 
-    println!("t01 UDP heartbeat sender başladı");
+    println!("\n\x1b[38;2;175;238;238mt01 UDP heartbeat sender başladı");
     println!("Ana-PC hedef adresi: {MAIN_PC_ADDR}");
-    println!("Heartbeat aralığı: {HEARTBEAT_INTERVAL_MS} ms");
+    println!("Heartbeat aralığı: {HEARTBEAT_INTERVAL_MS} ms\n\x1b[0m");
 
     let mut seq: u32 = 0;
 
