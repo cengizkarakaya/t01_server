@@ -16,33 +16,46 @@ const BLUE: &str = "\x1b[34m";
 const YELLOW: &str = "\x1b[33m";
 const MAGENTA: &str = "\x1b[35m";
 const WHITE: &str = "\x1b[97m";
+
 const CLEAR_SCREEN: &str = "\x1b[2J";
 const MOVE_CURSOR_HOME: &str = "\x1b[H";
 const HIDE_CURSOR: &str = "\x1b[?25l";
+const SHOW_CURSOR: &str = "\x1b[?25h";
 
-pub fn heartbeat() -> std::io::Result<()> {
+pub fn heartbeat() -> io::Result<()> {
     let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
 
     print!("{HIDE_CURSOR}");
+    io::stdout().flush()?;
 
+    let result = run_heartbeat_loop(&socket);
+
+    print!("{SHOW_CURSOR}{RESET}");
+    io::stdout().flush()?;
+
+    result
+}
+
+fn run_heartbeat_loop(socket: &UdpSocket) -> io::Result<()> {
     let mut seq: u32 = 0;
 
     loop {
         let timestamp_ms = current_time_ms();
-
-        let msg = format!(
-            "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
-            seq, timestamp_ms
-        );
+        let msg = build_heartbeat_message(seq, timestamp_ms);
 
         socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
-
         render_dashboard(seq, timestamp_ms, &msg)?;
-        io::stdout().flush()?;
 
         seq = seq.wrapping_add(1);
         thread::sleep(Duration::from_millis(HEARTBEAT_INTERVAL_MS));
     }
+}
+
+fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
+    format!(
+        "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
+        seq, timestamp_ms
+    )
 }
 
 fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> io::Result<()> {
