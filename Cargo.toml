@@ -16,4 +16,4 @@ rust-version = "1.95"
 members = ["lib"]
 
 [dependencies]
-lib = { path = "lib" }
+terminal_colors = { path = "lib" }

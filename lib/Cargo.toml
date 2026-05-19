@@ -1,6 +1,9 @@
 [package]
-name = "lib"
+name = "terminal_colors"
 version = "0.1.0"
 edition = "2024"
+
+[lib]
+path = "src/terminal_colors.rs"
 
 [dependencies]
