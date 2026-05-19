@@ -47,9 +47,9 @@ fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
 fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> io::Result<()> {
     print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}");
 
-    println!("{BOLD}{C006_TEAL_SYSTEM}╔══════════════════════════════════════════════════════════════╗{RESET}");
-    println!("{BOLD}{C006_TEAL_SYSTEM}║{RESET} {BOLD}{C002_GREEN_SYSTEM}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}     ║{RESET}");
-    println!("{BOLD}{C006_TEAL_SYSTEM}╚══════════════════════════════════════════════════════════════╝{RESET}");
+    println!("{BOLD}{C006_TEAL_SYSTEM}╔═════════════════════════════════════════════════════════════╗{RESET}");
+    println!("{BOLD}{C006_TEAL_SYSTEM}║{RESET} {BOLD}{C002_GREEN_SYSTEM}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}    ║{RESET}");
+    println!("{BOLD}{C006_TEAL_SYSTEM}╚═════════════════════════════════════════════════════════════╝{RESET}");
     println!();
 
     println!("{BOLD}{C004_NAVY_SYSTEM}┌─ DURUM ─────────────────────────────────────────────────────┐{RESET}");
