@@ -4,6 +4,7 @@ use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use terminal_colors::*;
 
+//config:
 const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
 const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
@@ -14,7 +15,7 @@ pub fn heartbeat() -> io::Result<()> {
 
     print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}{HIDE_CURSOR}");
     io::stdout().flush()?;
-    
+
     print!("{HIDE_CURSOR}");
     io::stdout().flush()?;
 
