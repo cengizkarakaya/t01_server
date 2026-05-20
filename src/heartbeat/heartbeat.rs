@@ -9,8 +9,12 @@ const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
 
 pub fn heartbeat() -> io::Result<()> {
+
     let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
 
+    print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}{HIDE_CURSOR}");
+    io::stdout().flush()?;
+    
     print!("{HIDE_CURSOR}");
     io::stdout().flush()?;
 
@@ -39,40 +43,66 @@ fn run_heartbeat_loop(socket: &UdpSocket) -> io::Result<()> {
 
 fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
     format!(
-        "{{\"type\":\"heartbeat\",\"robot\":\"t01\",\"seq\":{},\"timestamp_ms\":{}}}",
+        "{{\"type\":\"heartbeat\",\"robot\":\"t01\",
+                  \"seq\":{},\"timestamp_ms\":{}}}",
         seq, timestamp_ms
     )
 }
 
 fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> io::Result<()> {
-    print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}");
+    print!("{MOVE_CURSOR_HOME}");
 
-    println!("{BOLD}{C006_TEAL_SYSTEM}╔═════════════════════════════════════════════════════════════╗{RESET}");
-    println!("{BOLD}{C006_TEAL_SYSTEM}║{RESET} {BOLD}{C002_GREEN_SYSTEM}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}    ║{RESET}");
-    println!("{BOLD}{C006_TEAL_SYSTEM}╚═════════════════════════════════════════════════════════════╝{RESET}");
+    println!(
+        "{BOLD}{C006_TEAL_SYSTEM}╔═════════════════════════════════════════════════════════════╗{RESET}"
+    );
+    println!(
+        "{BOLD}{C006_TEAL_SYSTEM}║{RESET} {BOLD}{C002_GREEN_SYSTEM}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}    ║{RESET}"
+    );
+    println!(
+        "{BOLD}{C006_TEAL_SYSTEM}╚═════════════════════════════════════════════════════════════╝{RESET}"
+    );
     println!();
 
-    println!("{BOLD}{C004_NAVY_SYSTEM}┌─ DURUM ─────────────────────────────────────────────────────┐{RESET}");
-    println!("{BOLD}{C004_NAVY_SYSTEM}│{RESET} {BOLD}{C002_GREEN_SYSTEM}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{C004_NAVY_SYSTEM}│{RESET}");
-    println!("{BOLD}{C004_NAVY_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}");
+    println!(
+        "{BOLD}{C004_NAVY_SYSTEM}┌─ DURUM ─────────────────────────────────────────────────────┐{RESET}"
+    );
+    println!(
+        "{BOLD}{C004_NAVY_SYSTEM}│{RESET} {BOLD}{C002_GREEN_SYSTEM}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{C004_NAVY_SYSTEM}│{RESET}"
+    );
+    println!(
+        "{BOLD}{C004_NAVY_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
+    );
     println!();
 
-    println!("{BOLD}{C005_PURPLE_SYSTEM}┌─ BAĞLANTI ──────────────────────────────────────────────────┐{RESET}");
+    println!(
+        "{BOLD}{C005_PURPLE_SYSTEM}┌─ BAĞLANTI ──────────────────────────────────────────────────┐{RESET}"
+    );
     print_row("Robot", "t01");
     print_row("Yerel bind", LOCAL_BIND_ADDR);
     print_row("Ana-PC hedef", MAIN_PC_ADDR);
     print_row("Aralık", format_args!("{HEARTBEAT_INTERVAL_MS} ms"));
-    println!("{BOLD}{C005_PURPLE_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}");
+    println!(
+        "{BOLD}{C005_PURPLE_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
+    );
     println!();
 
-    println!("{BOLD}{C011_YELLOW_SYSTEM}┌─ SON HEARTBEAT ──────────────────────────────────────────────┐{RESET}");
+    println!(
+        "{BOLD}{C011_YELLOW_SYSTEM}┌─ SON HEARTBEAT ─────────────────────────────────────────────┐{RESET}"
+    );
     print_row("Seq", seq);
     print_row("Timestamp_ms", timestamp_ms);
-    println!("{BOLD}{C011_YELLOW_SYSTEM}│{RESET} {BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}", "JSON", msg);
-    println!("{BOLD}{C011_YELLOW_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}");
+    println!(
+        "{BOLD}{C011_YELLOW_SYSTEM}│{RESET} {BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
+        "JSON", msg
+    );
+    println!(
+        "{BOLD}{C011_YELLOW_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
+    );
     println!();
 
-    println!("{DIM}Çıkmak için Ctrl+C  •  Ekran her pakette yeniden çizilir, terminal dolmaz.{RESET}");
+    println!(
+        "{DIM}Çıkmak için Ctrl+C  •  Ekran her pakette yeniden çizilir, terminal dolmaz.{RESET}"
+    );
 
     io::stdout().flush()
 }
