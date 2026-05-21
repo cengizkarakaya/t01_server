@@ -3,7 +3,7 @@ use std::net::UdpSocket;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use terminal_colors::*;
-// TODO: json yazısını bir ileri it.
+
 //config:
 const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
 const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
@@ -104,7 +104,7 @@ fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str, heart_symbol: &str)
     print_row("Timestamp_ms", timestamp_ms)?;
     write!(
         stdout(),
-        "{C006_TEAL_SYSTEM}{:<14}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
+        "{BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
         "JSON",
         msg
     )?;
