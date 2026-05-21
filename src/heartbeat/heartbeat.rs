@@ -1,4 +1,3 @@
-use std::fmt::write;
 use std::io::{self, Result, Write, stdout};
 use std::net::UdpSocket;
 use std::thread;
@@ -27,16 +26,15 @@ pub fn heartbeat() -> Result<()> {
 // heart_symbol = "\x1b[2;31m♥\x1b[0m"; sönük
 
 fn run_heartbeat_loop(socket: &UdpSocket) -> Result<()> {
-
     let mut seq: u32 = 0;
     let mut heart_is_on = false;
 
     loop {
-
         heart_is_on = !heart_is_on;
+
         let heart_symbol = match heart_is_on {
-            true => "\x1b[1;31m♥\x1b[0m",
-            false => "\x1b[2;31m♥\x1b[0m",
+            true => "\x1b[1;31m❤︎\x1b[0m",
+            false => "\x1b[2;31m❤︎\x1b[0m",
         };
 
         let timestamp_ms = current_time_ms();
@@ -48,7 +46,6 @@ fn run_heartbeat_loop(socket: &UdpSocket) -> Result<()> {
 
         seq = seq.wrapping_add(1);
         thread::sleep(Duration::from_millis(HEARTBEAT_INTERVAL_MS));
-        
     }
 }
 
