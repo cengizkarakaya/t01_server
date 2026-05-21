@@ -1,4 +1,4 @@
-use std::io::{self, Write};
+use std::io::{self, stdout, Write, Result};
 use std::net::UdpSocket;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -9,25 +9,25 @@ const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
 const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
 
-pub fn heartbeat() -> io::Result<()> {
+pub fn heartbeat() -> Result<()> {
 
     let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
 
-    print!("{CLEAR_SCREEN}{MOVE_CURSOR_HOME}{HIDE_CURSOR}");
-    io::stdout().flush()?;
+    write!(stdout(), "{CLEAR_SCREEN}{MOVE_CURSOR_HOME}{HIDE_CURSOR}")?;
+    stdout().flush()?;
 
-    print!("{HIDE_CURSOR}");
-    io::stdout().flush()?;
+    write!(stdout(), "{HIDE_CURSOR}")?;
+    stdout().flush()?;
 
     let result = run_heartbeat_loop(&socket);
 
-    print!("{SHOW_CURSOR}{RESET}");
-    io::stdout().flush()?;
+    write!(stdout(), "{SHOW_CURSOR}{RESET}")?;
+    stdout().flush()?;
 
     result
 }
 
-fn run_heartbeat_loop(socket: &UdpSocket) -> io::Result<()> {
+fn run_heartbeat_loop(socket: &UdpSocket) -> Result<()> {
     let mut seq: u32 = 0;
 
     loop {
@@ -50,68 +50,57 @@ fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
     )
 }
 
-fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> io::Result<()> {
-    print!("{MOVE_CURSOR_HOME}");
+fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str) -> Result<()> {
+    write!(stdout(), "{MOVE_CURSOR_HOME}")?;
 
-    println!(
-        "{BOLD}{C006_TEAL_SYSTEM}╔═════════════════════════════════════════════════════════════╗{RESET}"
-    );
-    println!(
-        "{BOLD}{C006_TEAL_SYSTEM}║{RESET} {BOLD}{C002_GREEN_SYSTEM}t01 UDP HEARTBEAT SENDER{RESET} {DIM}- Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}    ║{RESET}"
-    );
-    println!(
-        "{BOLD}{C006_TEAL_SYSTEM}╚═════════════════════════════════════════════════════════════╝{RESET}"
-    );
-    println!();
+    writeln!(stdout(), "{}", "-".repeat(58))?;
 
-    println!(
-        "{BOLD}{C004_NAVY_SYSTEM}┌─ DURUM ─────────────────────────────────────────────────────┐{RESET}"
-    );
-    println!(
-        "{BOLD}{C004_NAVY_SYSTEM}│{RESET} {BOLD}{C002_GREEN_SYSTEM}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{C004_NAVY_SYSTEM}│{RESET}"
-    );
-    println!(
-        "{BOLD}{C004_NAVY_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
-    );
-    println!();
+    writeln!(stdout(), "{BOLD}{C006_TEAL_SYSTEM}{RESET} {BOLD}{C028_GREEN4}t01 UDP HEARTBEAT SENDER{RESET}{DIM}\n Raspberry Pi Zero 2 W / tmux{RESET} {BOLD}{C006_TEAL_SYSTEM}{RESET}"
+    )?;
+    writeln!(stdout(), "{}\n", "-".repeat(58))?;
 
-    println!(
-        "{BOLD}{C005_PURPLE_SYSTEM}┌─ BAĞLANTI ──────────────────────────────────────────────────┐{RESET}"
-    );
-    print_row("Robot", "t01");
-    print_row("Yerel bind", LOCAL_BIND_ADDR);
-    print_row("Ana-PC hedef", MAIN_PC_ADDR);
-    print_row("Aralık", format_args!("{HEARTBEAT_INTERVAL_MS} ms"));
-    println!(
-        "{BOLD}{C005_PURPLE_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
-    );
-    println!();
+    writeln!(stdout(), "{BOLD}{C070_CHARTREUSE3}-- DURUM {}{RESET}", "-".repeat(49))?;
 
-    println!(
-        "{BOLD}{C011_YELLOW_SYSTEM}┌─ SON HEARTBEAT ─────────────────────────────────────────────┐{RESET}"
-    );
-    print_row("Seq", seq);
-    print_row("Timestamp_ms", timestamp_ms);
-    println!(
-        "{BOLD}{C011_YELLOW_SYSTEM}│{RESET} {BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
+    writeln!(stdout(), "{BOLD}{C004_NAVY_SYSTEM}{RESET} {BOLD}{C002_GREEN_SYSTEM}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{C004_NAVY_SYSTEM}{RESET}"
+    )?;
+
+    writeln!(stdout(), "{BOLD}{C070_CHARTREUSE3}{}{RESET}", "-".repeat(58))?;
+    writeln!(stdout())?;
+
+    writeln!(stdout(), "{BOLD}{C011_YELLOW_SYSTEM}-- BAĞLANTI {}\n{RESET}", "-".repeat(46))?;
+
+    print_row("Robot", "t01")?;
+    print_row("Yerel bind", LOCAL_BIND_ADDR)?;
+    print_row("Ana-PC hedef", MAIN_PC_ADDR)?;
+    print_row("Aralık", format_args!("{HEARTBEAT_INTERVAL_MS} ms"))?;
+
+    write!(stdout(), "{BOLD}{C011_YELLOW_SYSTEM}{}\n{RESET}", "-".repeat(58))?;
+
+    writeln!(stdout())?;
+
+    write!(stdout(), "{BOLD}{C011_YELLOW_SYSTEM}-- SON HEARTBEAT {}\n{RESET}", "-".repeat(41))?;
+
+    print_row("Seq", seq)?;
+    print_row("Timestamp_ms", timestamp_ms)?;
+
+    write!(stdout(), "{BOLD}{C011_YELLOW_SYSTEM}{RESET} {BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
         "JSON", msg
-    );
-    println!(
-        "{BOLD}{C011_YELLOW_SYSTEM}└─────────────────────────────────────────────────────────────┘{RESET}"
-    );
-    println!();
+    )?;
 
-    println!(
-        "{DIM}Çıkmak için Ctrl+C  •  Ekran her pakette yeniden çizilir, terminal dolmaz.{RESET}"
-    );
+    write!(stdout(), "\n{BOLD}{C011_YELLOW_SYSTEM}{}{RESET}", "-".repeat(58))?;
+
+    writeln!(stdout())?;
+
+    write!(stdout(), "{DIM}Çıkmak için Ctrl+C{RESET}"
+    )?;
 
     io::stdout().flush()
 }
 
-fn print_row(label: &str, value: impl std::fmt::Display) {
-    println!(
-        "{BOLD}{C004_NAVY_SYSTEM}│{RESET} {BOLD}{C006_TEAL_SYSTEM}{label:<13}{RESET}: {C015_WHITE_SYSTEM}{value}{RESET}"
-    );
+fn print_row(label: &str, value: impl std::fmt::Display) -> Result<()>{
+    writeln!(stdout(), "{BOLD}{C004_NAVY_SYSTEM}{RESET} {BOLD}{C006_TEAL_SYSTEM}{label:<13}{RESET}: {C015_WHITE_SYSTEM}{value}{RESET}"
+    )?;
+    Ok(())
 }
 
 fn current_time_ms() -> u128 {
