@@ -1,4 +1,4 @@
-use std::io::{self, Result, Write, stdout};
+use std::io::{self, stdout, Result, Write};
 use std::net::UdpSocket;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -6,7 +6,7 @@ use terminal_colors::*;
 
 //config:
 const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
-const MAIN_PC_ADDR: &str = "192.168.1.3:5000";
+const MAIN_PC_ADDR: &str = "192.168.1.10:5000";
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
 
 pub fn heartbeat() -> Result<()> {
@@ -61,7 +61,7 @@ fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str, heart_symbol: &str)
     writeln!(stdout(), "{}", "-".repeat(58))?;
     writeln!(
         stdout(),
-        "{BOLD} \x1b[48;5;28m\x1b[38;5;15mt01 HEARTBEAT{RESET} {heart_symbol}{DIM}\n Raspberry Pi Zero 2 W / UDP{RESET}"
+        "\n{BOLD} \x1b[48;5;28m\x1b[38;5;15mt01 HEARTBEAT{RESET} {heart_symbol}{DIM}\n Raspberry Pi Zero 2 W / UDP{RESET}"
     )?;
     writeln!(stdout(), "{}\n", "-".repeat(58))?;
 
@@ -100,7 +100,7 @@ fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str, heart_symbol: &str)
         "{BOLD}{C011_YELLOW_SYSTEM}-- SON HEARTBEAT {}\n{RESET}",
         "-".repeat(41)
     )?;
-    print_row("Seq", seq)?;
+    print_row("Seq", format_with_commas(seq))?;
     print_row("Timestamp_ms", timestamp_ms)?;
     write!(
         stdout(),
@@ -125,6 +125,20 @@ fn print_row(label: &str, value: impl std::fmt::Display) -> Result<()> {
         "{BOLD}{C004_NAVY_SYSTEM}{RESET} {BOLD}{C006_TEAL_SYSTEM}{label:<13}{RESET}: {C015_WHITE_SYSTEM}{value}{RESET}"
     )?;
     Ok(())
+}
+
+fn format_with_commas(value: u32) -> String {
+    let digits = value.to_string();
+    let mut formatted = String::with_capacity(digits.len() + digits.len() / 3);
+
+    for (index, digit) in digits.chars().rev().enumerate() {
+        if index > 0 && index % 3 == 0 {
+            formatted.push(',');
+        }
+        formatted.push(digit);
+    }
+
+    formatted.chars().rev().collect()
 }
 
 fn current_time_ms() -> u128 {
