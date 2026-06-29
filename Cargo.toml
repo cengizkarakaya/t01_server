@@ -10,7 +10,7 @@ homepage = "https://github.com/cengizkarakaya/t01_server"
 keywords = ["rust", "t01_server", "t01", "cli"]
 categories = ["t01_server"]
 authors = ["Cengiz Karakaya <cengizkarakaya@hotmail.com>"]
-rust-version = "1.95"
+rust-version = "1.96"
 
 [workspace]
 members = ["lib"]
