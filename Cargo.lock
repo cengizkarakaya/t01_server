@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "t01_server"
+name = "Tio_Server"
 version = "0.1.0"
 dependencies = [
  "terminal_colors",

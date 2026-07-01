@@ -1,146 +1,126 @@
-use std::io::{self, stdout, Result, Write};
+// Bu program Raspberry Pi Zero 2 W üzerinde çalışır.
+// Tio, ana-PC'ye UDP heartbeat paketleri gönderir.
+//
+// Program ekrana hiçbir şey yazmaz. Bu sürüm headless kullanım için uygundur:
+// SSH, systemd service veya kutu içinde çalışan robot yazılımı gibi durumlarda
+// terminal dashboard gereksiz I/O yükü oluşturmaz.
+//
+// Her heartbeat paketinde:
+// - type
+// - robot
+// - seq
+// - timestamp_ms
+//
+// alanları bulunur. Bu alanlara ekleme veya çıkarma yapılmamıştır.
+// Yalnızca robot adı "Tio" olarak değiştirilmiştir.
+
+use std::io::{Error, ErrorKind, Result};
 use std::net::UdpSocket;
 use std::thread;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use terminal_colors::*;
 
-//config:
+// =======================
+// Config
+// =======================
+
+// Tio, herhangi bir sabit yerel port dinlemek zorunda değildir.
+// "0.0.0.0", kullanılabilir tüm IPv4 ağ arayüzlerinden çıkış yapılabilmesini sağlar.
+// ":0", yerel portu işletim sisteminin otomatik seçmesi demektir.
 const LOCAL_BIND_ADDR: &str = "0.0.0.0:0";
+
+// Heartbeat paketlerinin gönderileceği ana-PC adresi.
+// Ana-PC tarafında bu IP ve portta UDP dinleyici çalışmalıdır.
 const MAIN_PC_ADDR: &str = "192.168.1.10:5000";
+
+// Robot adı. Gönderilen JSON içindeki "robot" alanında kullanılır.
+const ROBOT_NAME: &str = "Tio";
+
+// 250 ms = saniyede 4 heartbeat paketi.
+// Bu, Pi Zero 2 W için hafif bir yük oluşturur ve bağlantı kopmasını hızlı fark etmek için uygundur.
+// 100 ms çoğu durumda gereksiz sık olur.
+// 1000 ms ise robot bağlantı takibi için biraz yavaş kalabilir.
 const HEARTBEAT_INTERVAL_MS: u64 = 250;
 
+// UDP socket'ini hazırlar ve heartbeat döngüsünü başlatır.
+//
+// `Result<()>`, socket oluşturma veya gönderim sırasında oluşabilecek I/O hatalarının
+// çağırana aktarılmasını sağlar. Bu fonksiyon ekrana yazı yazmaz.
 pub fn heartbeat() -> Result<()> {
     let socket = UdpSocket::bind(LOCAL_BIND_ADDR)?;
 
-    write!(stdout(), "{CLEAR_SCREEN}{MOVE_CURSOR_HOME}{HIDE_CURSOR}")?;
-    stdout().flush()?;
-
-    let result = run_heartbeat_loop(&socket);
-
-    write!(stdout(), "{SHOW_CURSOR}{RESET}")?;
-    stdout().flush()?;
-
-    result
+    run_heartbeat_loop(&socket)
 }
 
+// Verilen UDP socket üzerinden düzenli heartbeat paketleri gönderir.
+//
+// `&UdpSocket`, socket'in ownership'ini almaz; sadece borrow eder.
+// Böylece socket bu fonksiyona taşınmadan kullanılabilir.
+//
+// Döngü sonsuzdur. Program çalıştığı sürece Tio, ana-PC'ye heartbeat göndermeye devam eder.
 fn run_heartbeat_loop(socket: &UdpSocket) -> Result<()> {
     let mut seq: u32 = 0;
-    let mut heart_is_on = false;
 
     loop {
-        heart_is_on = !heart_is_on;
-
-        let heart_symbol = match heart_is_on {
-            true => "\x1b[1;31m❤︎\x1b[0m",
-            false => "\x1b[2;31m❤︎\x1b[0m",
-        };
-
         let timestamp_ms = current_time_ms();
         let msg = build_heartbeat_message(seq, timestamp_ms);
 
-        socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
+        send_heartbeat(socket, &msg)?;
 
-        render_dashboard(seq, timestamp_ms, &msg, heart_symbol)?;
-
+        // `u32` en büyük değerine ulaştığında 0'a sarar.
+        // Uzun süre çalışan sistemlerde taşma hatası oluşmasını engeller.
         seq = seq.wrapping_add(1);
+
+        // CPU'yu boş yere meşgul etmemek ve heartbeat hızını sabit tutmak için
+        // her gönderimden sonra belirtilen süre kadar beklenir.
         thread::sleep(Duration::from_millis(HEARTBEAT_INTERVAL_MS));
     }
 }
 
-fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
-    format!(
-        "{{\"type\":\"heartbeat\",\"robot\":\"t01\",
-                  \"seq\":{},\"timestamp_ms\":{}}}",
-        seq, timestamp_ms
-    )
-}
+// Heartbeat mesajını ana-PC'ye gönderir.
+//
+// UDP hızlı ve hafiftir, fakat teslim garantisi vermez.
+// Bu yüzden ana-PC tarafı `seq` değerlerini takip ederek paket kaybını anlayabilir.
+//
+// `send_to`, gönderilen byte sayısını döndürür.
+// UDP datagram normalde ya tamamen gönderilir ya da hata verir; yine de byte sayısı
+// kontrol edilerek eksik gönderim durumunda hata üretilir.
+fn send_heartbeat(socket: &UdpSocket, msg: &str) -> Result<()> {
+    let sent_bytes = socket.send_to(msg.as_bytes(), MAIN_PC_ADDR)?;
 
-fn render_dashboard(seq: u32, timestamp_ms: u128, msg: &str, heart_symbol: &str) -> Result<()> {
-    write!(stdout(), "{MOVE_CURSOR_HOME}")?;
+    if sent_bytes != msg.len() {
+        return Err(Error::new(
+            ErrorKind::Other,
+            "UDP heartbeat paketi eksik gönderildi",
+        ));
+    }
 
-    writeln!(stdout(), "{}", "-".repeat(58))?;
-    writeln!(
-        stdout(),
-        "\n{BOLD} \x1b[48;5;28m\x1b[38;5;15mt01 HEARTBEAT{RESET} {heart_symbol}{DIM}\n Raspberry Pi Zero 2 W / UDP{RESET}"
-    )?;
-    writeln!(stdout(), "{}\n", "-".repeat(58))?;
-
-    writeln!(
-        stdout(),
-        "{BOLD}{C070_CHARTREUSE3}-- DURUM {}{RESET}",
-        "-".repeat(49)
-    )?;
-    writeln!(
-        stdout(),
-        "{BOLD}{C004_NAVY_SYSTEM}{RESET} {BOLD}{C002_GREEN_SYSTEM}● ÇALIŞIYOR{RESET}  {DIM}Heartbeat paketleri düzenli gönderiliyor{RESET}       {BOLD}{C004_NAVY_SYSTEM}{RESET}"
-    )?;
-    writeln!(
-        stdout(),
-        "{BOLD}{C070_CHARTREUSE3}{}{RESET}\n",
-        "-".repeat(58)
-    )?;
-
-    write!(
-        stdout(),
-        "{BOLD}{C011_YELLOW_SYSTEM}-- BAĞLANTI {}\n{RESET}",
-        "-".repeat(46)
-    )?;
-    print_row("Robot", "t01")?;
-    print_row("Yerel bind", LOCAL_BIND_ADDR)?;
-    print_row("Ana-PC hedef", MAIN_PC_ADDR)?;
-    print_row("Aralık", format_args!("{HEARTBEAT_INTERVAL_MS} ms"))?;
-    write!(
-        stdout(),
-        "{BOLD}{C011_YELLOW_SYSTEM}{}\n\n{RESET}",
-        "-".repeat(58)
-    )?;
-
-    write!(
-        stdout(),
-        "{BOLD}{C011_YELLOW_SYSTEM}-- SON HEARTBEAT {}\n{RESET}",
-        "-".repeat(41)
-    )?;
-    print_row("Seq", format_with_commas(seq))?;
-    print_row("Timestamp_ms", timestamp_ms)?;
-    write!(
-        stdout(),
-        "{BOLD}{C006_TEAL_SYSTEM}{:<13}{RESET}: {C015_WHITE_SYSTEM}{}{RESET}",
-        "JSON",
-        msg
-    )?;
-    write!(
-        stdout(),
-        "\n{BOLD}{C011_YELLOW_SYSTEM}{}\n{RESET}",
-        "-".repeat(58)
-    )?;
-
-    write!(stdout(), "{DIM}Çıkmak için Ctrl+C{RESET}")?;
-
-    io::stdout().flush()
-}
-
-fn print_row(label: &str, value: impl std::fmt::Display) -> Result<()> {
-    writeln!(
-        stdout(),
-        "{BOLD}{C004_NAVY_SYSTEM}{RESET} {BOLD}{C006_TEAL_SYSTEM}{label:<13}{RESET}: {C015_WHITE_SYSTEM}{value}{RESET}"
-    )?;
     Ok(())
 }
 
-fn format_with_commas(value: u32) -> String {
-    let digits = value.to_string();
-    let mut formatted = String::with_capacity(digits.len() + digits.len() / 3);
-
-    for (index, digit) in digits.chars().rev().enumerate() {
-        if index > 0 && index % 3 == 0 {
-            formatted.push(',');
-        }
-        formatted.push(digit);
-    }
-
-    formatted.chars().rev().collect()
+// Sıra numarası ve timestamp değerini JSON benzeri bir String içinde birleştirir.
+//
+// Gönderilen alanlar:
+// - type
+// - robot
+// - seq
+// - timestamp_ms
+//
+// Bu yapıyı ana-PC tarafındaki alıcı program parse edebilir.
+fn build_heartbeat_message(seq: u32, timestamp_ms: u128) -> String {
+    format!(
+        "{{\"type\":\"heartbeat\",\"robot\":\"{}\",\"seq\":{},\"timestamp_ms\":{}}}",
+        ROBOT_NAME, seq, timestamp_ms
+    )
 }
 
+// Şimdiki zamanı UNIX epoch'tan beri geçen milisaniye olarak hesaplar.
+//
+// UNIX epoch:
+// 1970-01-01 00:00:00 UTC
+//
+// `SystemTime::now()` sistem saatini verir.
+// `duration_since(UNIX_EPOCH)` epoch'tan bu ana kadar geçen süreyi hesaplar.
+// Sistem saati garip biçimde epoch'tan önce görünürse panic yerine 0 döner.
 fn current_time_ms() -> u128 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
